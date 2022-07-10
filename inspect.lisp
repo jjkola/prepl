@@ -760,10 +760,17 @@ cons cells and LIST-TYPE is :normal, :dotted, or :cyclic"
                (cons "PLIST" (symbol-plist object)))))
     (list components (length components) :named nil)))
 
+#-sbcl
+(defun inspected-structure-parts (object)
+  '())
+
+#+sbcl
 (defun inspected-structure-parts (object)
   (let ((components-list '())
-        #+sbcl (info (sb-kernel:wrapper-info (sb-kernel:wrapper-of object))))
-    #+sbcl 
+        #+#.(prepl::with-symbol 'wrapper-info 'sb-kernel)
+        (info (sb-kernel:wrapper-info (sb-kernel:wrapper-of object)))
+        #-#.(prepl::with-symbol 'wrapper-info 'sb-kernel)
+        (info (sb-kernel:layout-info (sb-kernel:layout-of object))))
     (when (sb-kernel::defstruct-description-p info)
       (dolist (dd-slot (sb-kernel:dd-slots info) (nreverse components-list))
         (push (cons (string (sb-kernel:dsd-name dd-slot))
